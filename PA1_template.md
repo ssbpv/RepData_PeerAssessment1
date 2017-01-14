@@ -1,14 +1,10 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
 
-```{r,message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 library(lattice)
@@ -23,61 +19,71 @@ data<-read.csv(activity,header = TRUE)
 
 ## What is mean total number of steps taken per day?
 
-```{r}
 
+```r
 TotalByDate<-group_by(data, date) %>% summarise_each(funs(sum),steps)
 
 hist(TotalByDate$steps, xlab = "Total Steps", main = "Histogram of total number of steps taken each day")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+```r
 tm<-mean(TotalByDate$steps,na.rm=TRUE)
 
 tmed<-median(TotalByDate$steps,na.rm=TRUE)
-
 ```
-For total number of steps taken per day the **mean** is `r tm` and the **median** is `r tmed`
+For total number of steps taken per day the **mean** is 1.0766189\times 10^{4} and the **median** is 10765
 
 ## What is the average daily activity pattern?
 
-```{r}
+
+```r
 AvByInt<-group_by(data, interval) %>% summarise_each(funs(mean(., na.rm = TRUE)),steps)
 
 plot(AvByInt$interval,AvByInt$steps,type="l",xlab="5 min intervals",ylab= "Steps (average)",main="Average daily activity pattern")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
+```r
 z<-AvByInt[which.max(AvByInt$steps),]
 int<-z[1]
-
 ```
-The `r int` th **5-minute interval**, on average across all the days in the dataset, contains the maximum number of steps
+The 835 th **5-minute interval**, on average across all the days in the dataset, contains the maximum number of steps
 
 ## Imputing missing values
 
-```{r}
+
+```r
 sna<-sum(is.na(data))
 ```
 The total number of missing values in the dataset (i.e. the total number of rows with NAs)
-is `r sna`
+is 2304
 
-```{r,results='hide'}
+
+```r
  ### I have used the MICE (Multivariate Imputation via Chained Equations) package to imput the missing values
 impdata<-mice(data,seed=10)
 ### new adtaset with missing data filled in
 compdata<-complete(impdata,1)
-
 ```
-```{r}
 
+```r
 ImpDataByDate<-group_by(compdata, date) %>% summarise_each(funs(sum),steps)
 
 hist(ImpDataByDate$steps, xlab = "Total Steps", main = "Histogram of total number of steps taken each day from imputed data")
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+```r
 impm<-mean(ImpDataByDate$steps)
 
 impmed<-median(ImpDataByDate$steps)
-
 ```
 
- For total number of steps taken per day the **mean** is `r impm` and the **median** is `r impmed`.
+ For total number of steps taken per day the **mean** is 1.0872131\times 10^{4} and the **median** is 10765.
  
  Do these values differ from the estimates from the first part of the assignment? --Yes
  
@@ -85,8 +91,8 @@ impmed<-median(ImpDataByDate$steps)
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r}
 
+```r
 compdata$Days<-weekdays(as.Date(as.character(compdata$date)),abbreviate = TRUE)
 compdata$Days<-gsub("Sat|Sun","Weekend",compdata$Days)
 compdata$Days<-gsub("Mon|Tue|Wed|Thu|Fri","Weekday",compdata$Days)
@@ -96,5 +102,6 @@ compdata$Days<-as.factor(compdata$Days) #factor variable in the dataset with two
 AvByDayInt<-group_by(compdata, Days, interval) %>% summarise_each(funs(mean(., na.rm = TRUE)),steps)
 
 xyplot(steps~interval|Days,data=AvByDayInt,type="l",layout=c(1,2),xlab="5 min intervals",ylab= "Steps (average)",main="Average daily activity pattern")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
